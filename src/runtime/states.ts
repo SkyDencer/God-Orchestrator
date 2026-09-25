@@ -1,3 +1,4 @@
+// Required for API consumers
 export enum ProjectState {
   CREATED = 'CREATED',
   ANALYZING = 'ANALYZING',

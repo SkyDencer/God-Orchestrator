@@ -1,7 +1,6 @@
-import Database from 'better-sqlite3';
 import { Job, PersistentQueue } from './queue.js';
 
-export type JobHandler = (job: Job) => Promise<void>;
+export type JobHandler = (_job: Job) => Promise<void>;
 
 export interface SchedulerConfig {
   pollIntervalMs: number;

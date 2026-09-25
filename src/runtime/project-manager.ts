@@ -255,7 +255,7 @@ export class ProjectManager {
   getOriginalSpecification(projectId: string): Specification | null {
     const rows = this.db.prepare(
       'SELECT * FROM project_specifications WHERE project_id = ? AND is_original = 1 LIMIT 1',
-    ).all() as Array<{
+    ).all(projectId) as Array<{
       id: number;
       content: string;
       hash: string;

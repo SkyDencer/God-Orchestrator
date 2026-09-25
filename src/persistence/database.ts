@@ -5,7 +5,7 @@ import * as path from 'path';
 export interface DatabaseConfig {
   filepath: string;
   timeout?: number;
-  verbose?: (...args: unknown[]) => void;
+  verbose?: (..._args: unknown[]) => void;
 }
 
 /**

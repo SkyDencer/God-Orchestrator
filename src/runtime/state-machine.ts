@@ -1,5 +1,3 @@
-import { getAllowedTransitions } from './transitions.js';
-
 export class StateMachine<T extends string> {
   private readonly transitions: Map<T, T[]>;
 
