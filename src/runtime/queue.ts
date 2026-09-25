@@ -262,13 +262,13 @@ export class PersistentQueue {
   }
 
   private generateJobId(idempotencyKey: string, type: string): string {
-    // Simple deterministic ID generation
+    // Purely deterministic hash (no timestamp) for idempotency
     let hash = 0;
     const str = `${type}:${idempotencyKey}`;
     for (let i = 0; i < str.length; i++) {
       hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
     }
-    return `job-${Math.abs(hash).toString(36)}-${Date.now().toString(36)}`;
+    return `job-${Math.abs(hash).toString(36)}`;
   }
 
   private mapRowToJob(row: JobRow): Job {
