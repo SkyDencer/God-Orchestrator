@@ -62,12 +62,27 @@ npm run lint exit 0
 
 ---
 
+## Git Log (commits cited in this report, verified in this session)
+
+```
+35e2d28 docs: Phase 0/1 completion reports and MEGA-MARATHON SUMMARY; apply fix-round runtime changes
+0407ef2 fix: lint, secret redaction, filesystem fallback, state machine tests
+f9e8be4 feat: add report parser with multi-strategy extraction
+070ffca feat: add task builder with prompt assembly from contracts
+f67ae8a feat: add session manager with gateway-level context reconstruction
+379929e feat: add process manager with Windows cmd wrapper support
+5fca42e feat: add OpenCode adapter with Windows-compatible invocation
+4ce2b71 feat: add AgentAdapter interface and contract types
+```
+
+---
+
 ## Phase 1 Acceptance Criteria Verification
 
 | Criterion | Status | Evidence |
 |-----------|--------|----------|
-| Start OpenCode via the adapter | ✅ PASS | Real smoke test: `healthCheck()` returns `{ healthy: true, version: "1.18.32" }`; CLI verified: `opencode --version` → `1.18.32` |
-| Execute a task | ✅ PASS | PONG task: objective `"reply with the single word PONG"`, timeoutSeconds 60; result status `completed`, exitCode `0`, ended ~26s |
+| Start OpenCode via the adapter | ✅ PASS | `opencode-adapter.test.ts:108-110` — real healthCheck test asserts `healthy === true` and `version` is a non-empty string; CLI `opencode --version` → `1.18.32` (verified in this session) |
+| Execute a task | ❓ NOT VERIFIED — no test exercises `executeTask()` with a real opencode invocation; `opencode-adapter.test.ts` tests only `healthCheck`, `startSession`, and prompt construction. No PONG task or result-status assertion exists in any test file. |
 | Collect stdout and stderr | ✅ PASS | `process-manager.ts:55-63` captures stdout/stderr via `child.stdout`/`child.stderr` streams; ProcessManager tests cover this |
 | Timeout works | ✅ PASS | `opencode-adapter.ts:129-144` — objective `"sleep for 30 seconds then reply DONE"`, timeoutSeconds 2; result status `timeout`, ended 2025ms after start; killed via `taskkill /F /T /PID` |
 | Stop works | ✅ PASS | `opencode-adapter.ts:208-220` — `stopSession()` changes session status to `stopped`, kills all child processes |
@@ -78,5 +93,5 @@ npm run lint exit 0
 
 ## Problems Noted
 
-- **1.5 Secret/out-of-scope filtering not implemented** — `task-builder.ts:32` has a doc comment stating 'Does NOT include secrets' but the code has no mechanism to detect, filter, or redact secrets. Any secret value passed into contract/context inputs would be included verbatim.
+- ~~**1.5 Secret/out-of-scope filtering not implemented**~~ — **RESOLVED in `0407ef2`** — `src/agent/task-builder.ts:23-58` defines `redactSecrets()` and applies it to all context fields at lines 81-91 before prompt assembly. `tests/agent/task-builder.test.ts:125-138` covers secret redaction. Note: `opencode-prompt-builder.ts` and `process-manager.ts` still lack redaction.
 - **1.6 Fallback strategy is not a filesystem fallback** — `report-parser.ts:88-89, 175-202` implements a 'construct minimal report from exit code + stderr' fallback, not a filesystem-based fallback. No file system reads occur in the fourth strategy.

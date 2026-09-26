@@ -13,9 +13,9 @@
 
 | Subphase | Result |
 |----------|--------|
-| AS-002 — Structured report format | PASS (partial: internal inconsistency in summary counts) |
+| AS-002 — Provider Configuration Deep Test | PASS (partial: AS-002/AS-004 labels swapped in this summary — see Known Limitations) |
 | AS-003 — Session handling | PASS (commit mismatch: evidence in d010582, cited eeab400) |
-| AS-004 — Decision report test | PASS (2 log files untracked) |
+| AS-004 — Structured Report Test | PASS (2 log files untracked) |
 | AS-005 — Skills integration | PASS (sparse evidence — only 2 log files) |
 | AS-006 — SQLite on Windows | PASS (T6/T7 NOT_RUN; WAL tested only on in-memory DB) |
 | AS-007 — God-Agent loop | PASS (commit mismatch: evidence in a15b63d, cited 243bb6f) |
@@ -98,9 +98,9 @@
 | INV-04 | Original spec version never overwritten | ✅ Enforced |
 | INV-05 | Timeout enforced with bounded retry | ✅ Enforced |
 | INV-06 | No test deleted or weakened | ✅ Enforced |
-| INV-07 | State change + event in one transaction | ❌ NOT ENFORCED — ProjectManager.updateStatus() calls stateMachine.validateTransition(), then updateStatusStmt.run(), then eventStore.append() as three separate statements outside any transaction. atomicTransition() exists but is unused by updateStatus(). |
+| INV-07 | State change + event in one transaction | ✅ Enforced — `ProjectManager.updateStatus()` calls `atomicTransition(this.db, this.eventStore, { …, tableName: 'project_manager' })` at `src/runtime/project-manager.ts:182-192`; `delete()` does the same at lines 207-217. `Transition.tableName` field added in `src/runtime/atomic.ts:15`. |
 | INV-08 | Job lease concurrency safety | ❌ UNTESTED — leaseNext() uses single atomic UPDATE, safe for one connection, but no test verifies concurrent multi-worker lease safety |
-| INV-09 | Secrets not filtered from prompts/logs | ❌ NOT ENFORCED — no runtime check in task-builder, opencode-prompt-builder, or process-manager logging |
+| INV-09 | Secrets not filtered from prompts/logs | ⚠️ PARTIALLY ENFORCED — `src/agent/task-builder.ts:23-58,81-91` redacts secrets from all context fields before prompt assembly; `src/runtime/scheduler.ts:3-20,126` redacts `console.error` output. However, `src/agent/opencode-prompt-builder.ts` and `src/agent/process-manager.ts` have no redaction — raw prompts and process stdout/stderr are unredacted. |
 | INV-10 | Report parser fallback is filesystem-based | ❌ NOT ENFORCED — fallback strategy constructs from exit code + stderr, no filesystem access |
 | INV-11 | Reconciliation produces 'block' action | ❌ NOT ENFORCED — reconciliation.ts:26-50 never assigns 'block' |
 | INV-12 through INV-15 | (Remaining invariants) | ⚪ UNTHEDED — insufficient evidence in mission scope to assess |
@@ -109,36 +109,38 @@
 
 ## Golden Rules Audit (20 rules)
 
-| Rule | Status |
-|------|--------|
-| GR-01 | ✅ Enforced |
-| GR-02 | ✅ Enforced |
-| GR-03 | ✅ Enforced |
-| GR-04 | ✅ Enforced |
-| GR-05 | ✅ Enforced |
-| GR-06 | ✅ Enforced |
-| GR-07 | ✅ Enforced |
-| GR-08 | ❌ Not enforced — atomicTransition not used by ProjectManager.updateStatus |
-| GR-09 | ❌ Not enforced — secrets not filtered |
-| GR-10 | ⚪ Untested |
-| GR-11 | ⚪ Untested |
-| GR-12 | ⚪ Untested |
-| GR-13 | ⚪ Untested |
-| GR-14 | ⚪ Untested |
-| GR-15 | ⚪ Untested |
-| GR-16 | ⚪ Untested |
-| GR-17 | ⚪ Untested |
-| GR-18 | ⚪ Untested |
-| GR-19 | ⚪ Untested |
-| GR-20 | ⚪ Untested |
+> **Note:** Only 5 of 20 golden rules are defined anywhere in the repository (in `docs/reports/phase-(-1.1)-as-001-2026-09-25.md:100-104`). GR-01 through GR-07 and GR-10 through GR-20 have no source text. The audit below reflects only what can be verified from the codebase.
+
+| Rule | Definition (from phase-(-1.1)-as-001-2026-09-25.md) | Status | Evidence |
+|------|---------------------------------------------------|--------|----------|
+| GR-01 | Agent Report ≠ Truth | ✅ Enforced | `phase-(-1.1)-as-001-2026-09-25.md:100` — verified actual filesystem (`test-output.txt` exists with correct content) |
+| GR-02 | Verification determines PASS | ✅ Enforced | `phase-(-1.1)-as-001-2026-09-25.md:101` — ran actual `cat test-output.txt`, `node hello.js`, `git status` |
+| GR-03 | LLM never directly changes Runtime State | ✅ Enforced | `phase-(-1.1)-as-001-2026-09-25.md:102` — no God Orchestrator runtime existed at that point; Phase 0+ code enforces via state machine validation (`state-machine.ts`) |
+| GR-04 | ⚪ Undefined — rule text not found in repository | ⚪ Undefined | — |
+| GR-05 | ⚪ Undefined — rule text not found in repository | ⚪ Undefined | — |
+| GR-06 | ⚪ Undefined — rule text not found in repository | ⚪ Undefined | — |
+| GR-07 | ⚪ Undefined — rule text not found in repository | ⚪ Undefined | — |
+| GR-08 | State change + event in one transaction | ✅ Enforced — `ProjectManager.updateStatus()` calls `atomicTransition()` at `src/runtime/project-manager.ts:182-192`; `delete()` at lines 207-217. `Transition.tableName` added at `src/runtime/atomic.ts:15`. |
+| GR-09 | Secrets filtered from prompts/logs | ⚠️ Partially enforced — `task-builder.ts:81-91` redacts all context fields; `scheduler.ts:126` redacts `console.error`. `opencode-prompt-builder.ts` and `process-manager.ts` have no redaction. |
+| GR-10 | ⚪ Undefined — rule text not found in repository | ⚪ Undefined | — |
+| GR-11 | ⚪ Undefined — rule text not found in repository | ⚪ Undefined | — |
+| GR-12 | ⚪ Undefined — rule text not found in repository | ⚪ Undefined | — |
+| GR-13 | Partial success never represented as full | ✅ Enforced | `phase-(-1.1)-as-001-2026-09-25.md:104` — rate limits occurred but core task completed before they hit; marked as partial |
+| GR-14 | ⚪ Undefined — rule text not found in repository | ⚪ Undefined | — |
+| GR-15 | ⚪ Undefined — rule text not found in repository | ⚪ Undefined | — |
+| GR-16 | ⚪ Undefined — rule text not found in repository | ⚪ Undefined | — |
+| GR-17 | ⚪ Undefined — rule text not found in repository | ⚪ Undefined | — |
+| GR-18 | ⚪ Undefined — rule text not found in repository | ⚪ Undefined | — |
+| GR-19 | ⚪ Undefined — rule text not found in repository | ⚪ Undefined | — |
+| GR-20 | ⚪ Undefined — rule text not found in repository | ⚪ Undefined | — |
 
 ---
 
 ## Open Items
 
 1. **Result persistence for opencode executions** — no code persists opencode task results to the database; acceptance criterion 7 not verified.
-2. **ProjectManager atomicTransition adoption** — `atomicTransition()` exists in `src/runtime/atomic.ts` but `ProjectManager.updateStatus()` and `delete()` do not use it. Two separate transactions (state update, event append) risk inconsistency on crash.
-3. **Secret redaction in prompts and logs** — no runtime mechanism filters secrets from task-builder inputs, opencode prompts, or process-manager console output.
+2. ~~**ProjectManager atomicTransition adoption**~~ — **RESOLVED** — `atomicTransition()` is now called by both `updateStatus()` (`src/runtime/project-manager.ts:182-192`) and `delete()` (`src/runtime/project-manager.ts:207-217`). `Transition.tableName` override added at `src/runtime/atomic.ts:15`.
+3. **Secret redaction coverage gap** — `task-builder.ts` and `scheduler.ts` redact secrets, but `opencode-prompt-builder.ts` (line 24-67) and `process-manager.ts` (lines 55-63, 122-127) emit raw prompts and process output without redaction.
 4. **Concurrent lease safety test** — no test verifies multi-worker concurrent lease acquisition.
 5. **Phase 1 subphase-specific reports** — not produced.
 6. **11 test files gitignored** — `*.test.ts` in `.gitignore` hides tests from git history; coverage audit is incomplete.
@@ -151,15 +153,15 @@
 2. OpenCodeAdapter smoke test verified only on Windows; no Linux/macOS smoke test run.
 3. ReportParser strategy 4 ("filesystem fallback") is misnamed — it uses exit code + stderr, not filesystem reads.
 4. Reconciliation never produces a `'block'` recommendation despite the type declaring it.
-5. AS-002 summary has internal inconsistency (counts don't match entries).
+5. AS-002/AS-004 label swap in this summary — AS-002 is "Provider Configuration Deep Test" (not "Structured report format") and AS-004 is "Structured Report Test" (not "Decision report test"). The original phase-minus-1-exit report had them correct; this summary swapped them.
 6. AS-003 and AS-007 have commit mismatches between cited commits and evidence locations.
 
 ---
 
 ## Open Questions for the Human
 
-1. Should `ProjectManager.updateStatus()` be migrated to use `atomicTransition()` to close the state-change + event atomicity gap?
-2. Should secret redaction be implemented as a middleware layer in TaskBuilder or as a post-processing step on prompt output?
+1. ~~Should `ProjectManager.updateStatus()` be migrated to use `atomicTransition()` to close the state-change + event atomicity gap?~~ — **RESOLVED** in `35e2d28`.
+2. Should secret redaction be extended to `opencode-prompt-builder.ts` and `process-manager.ts`, or is the current coverage (task-builder + scheduler) sufficient?
 3. Should the ReportParser strategy 4 be renamed to reflect its actual behavior, or should a real filesystem fallback be added?
 4. Should the `'block'` recommendation in `reconciliation.ts` be implemented, or removed from the type?
 5. Is it acceptable that `*.test.ts` files are gitignored, making test history invisible to `git log`?
