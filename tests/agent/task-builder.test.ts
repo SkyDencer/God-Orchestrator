@@ -121,4 +121,19 @@ describe('TaskBuilder', () => {
     expect(built.prompt).toContain('Implement authentication module')
     expect(built.prompt).toContain('### ACCEPTANCE CRITERIA')
   })
+
+  it('redacts secrets from context', () => {
+    const secretContext: TaskContext = {
+      projectSummary: 'API key: sk-abc123xyz789 is our production key',
+      previousPhases: ['phase with token=ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef'],
+      architecture: undefined,
+      constraints: undefined,
+      relevantMemory: { dbPassword: 'supersecret123' },
+    }
+    const built = builder.build(contract, secretContext)
+    expect(built.prompt).not.toContain('sk-abc123xyz789')
+    expect(built.prompt).not.toContain('ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef')
+    expect(built.prompt).not.toContain('supersecret123')
+    expect(built.prompt).toContain('[REDACTED]')
+  })
 })

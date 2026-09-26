@@ -117,13 +117,13 @@ export class OpenCodeAdapter implements AgentAdapter {
 
     this.processes.set(runId, child)
 
-    let stdout = ''
-    let stderr = ''
+    let _stdout = ''
+    let _stderr = ''
     child.stdout?.on('data', (chunk: Buffer) => {
-      stdout += chunk.toString()
+      _stdout += chunk.toString()
     })
     child.stderr?.on('data', (chunk: Buffer) => {
-      stderr += chunk.toString()
+      _stderr += chunk.toString()
     })
 
     const timeoutMs = (contract.timeoutSeconds ?? 300) * 1000
@@ -209,7 +209,7 @@ export class OpenCodeAdapter implements AgentAdapter {
     const session = this.sessions.get(sessionId)
     if (!session) return
     // Kill any running processes for this session
-    for (const [runId, child] of this.processes) {
+    for (const [runId] of this.processes) {
       if (this.runs.get(runId)?.sessionId === sessionId) {
         this.killProcess(runId)
       }

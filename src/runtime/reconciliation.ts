@@ -23,7 +23,10 @@ export function reconcile(db: Database.Database): ReconciliationResult {
   let recommendedAction: ReconciliationResult['recommendedAction'];
   let reasoning: string;
 
-  if (staleRuns > 0) {
+  if (staleRuns > 0 && uncommittedChanges > 0) {
+    recommendedAction = 'block';
+    reasoning = `Found ${staleRuns} stale runs and ${uncommittedChanges} uncommitted changes. Recommend blocking until manual review resolves both issues.`;
+  } else if (staleRuns > 0) {
     recommendedAction = 'retry';
     reasoning = `Found ${staleRuns} stale agent runs. Recommend retrying failed jobs.`;
   } else if (orphanedPhases > 0) {

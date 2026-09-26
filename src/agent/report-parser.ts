@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import * as fs from 'node:fs'
 
 export const AgentReportSchema = z.object({
   status: z.enum(['completed', 'failed', 'partial', 'blocked']),
@@ -40,7 +41,8 @@ export class ReportParser {
    * 1. Native JSON — if the entire stdout is valid JSON, parse it directly.
    * 2. Delimiter extraction — look for <<<REPORT_START>>>...<<<REPORT_END>>> block.
    * 3. Markdown section extraction — look for a ### AGENT REPORT section.
-   * 4. Fallback — construct minimal report from exit code + stderr.
+   * 4. Filesystem fallback — read cached report from the agent's output directory.
+   * 5. Fallback — construct minimal report from exit code + stderr.
    */
   parse(stdout: string, stderr: string, exitCode: number | null): AgentReport {
     // Strategy 1: Native JSON
@@ -85,8 +87,39 @@ export class ReportParser {
       }
     }
 
-    // Strategy 4: Fallback — construct minimal report from exit code + stderr
+    // Strategy 4: Filesystem fallback — read cached report from disk
+    // The agent may write a report file to its output directory even when stdout
+    // does not contain structured data. Look for common report names.
+    const fsReport = this.tryFilesystemFallback()
+    if (fsReport) return fsReport
+
+    // Strategy 5: Fallback — construct minimal report from exit code + stderr
     return this.fallbackReport(stdout, stderr, exitCode)
+  }
+
+  /**
+   * Attempt to read a previously saved agent report from the filesystem.
+   * Checks common paths: the current working directory and well-known report locations.
+   */
+  private tryFilesystemFallback(): AgentReport | undefined {
+    const candidates = [
+      'agent-report.json',
+      'report.json',
+      '.god-orchestrator/report.json',
+      'output/report.json',
+    ]
+    for (const name of candidates) {
+      try {
+        const content = fs.readFileSync(name, 'utf8')
+        const parsed = JSON.parse(content)
+        const report = AgentReportSchema.safeParse(parsed)
+        if (report.success) return report.data
+      } catch {
+        // File not found or invalid JSON — try next candidate
+        continue
+      }
+    }
+    return undefined
   }
 
   /**

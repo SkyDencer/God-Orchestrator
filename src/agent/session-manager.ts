@@ -1,7 +1,6 @@
 import Database from 'better-sqlite3'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import { randomUUID } from 'node:crypto'
 import type { EventStore } from '../runtime/event-store.js'
 import type { AgentSession } from './types.js'
 

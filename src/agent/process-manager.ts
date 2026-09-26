@@ -80,7 +80,7 @@ export class ProcessManager {
         })
       })
 
-      child.on('error', (err) => {
+      child.on('error', () => {
         cleanup()
         resolve({
           exitCode: null,

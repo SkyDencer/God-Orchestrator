@@ -20,6 +20,43 @@ export interface BuiltTask {
 
 const AVG_CHARS_PER_TOKEN = 4
 
+const SECRET_PATTERNS = [
+  // Match "api key", "apikey", "api_key", "api-key" followed by : or = and a secret value
+  /(?:api\s*[_-]?key|apikey)\s*[:=]\s*['"]?([^\s'"]{8,})['"]?/gi,
+  /(?:api\s*[_-]?secret|apisecret)\s*[:=]\s*['"]?([^\s'"]{8,})['"]?/gi,
+  /(?:secret[_-]?key|secretkey)\s*[:=]\s*['"]?([^\s'"]{8,})['"]?/gi,
+  // Password patterns
+  /(?:password|passwd|pwd)\s*[:=]\s*['"]?([^\s'"]{4,})['"]?/gi,
+  // Token patterns
+  /(?:token|auth[_-]?token|access[_-]?token|bearer)\s*[:=]\s*['"]?([^\s'"]{8,})['"]?/gi,
+  // AWS credentials
+  /(?:aws[_-]?access[_-]?key[_-]?id|aws[_-]?secret[_-]?access[_-]?key)\s*[:=]\s*['"]?([^\s'"]{8,})['"]?/gi,
+  // Private keys
+  /-----BEGIN\s+(RSA|EC|OPENSSH)\s+PRIVATE\s+KEY-----/gi,
+  // GitHub personal access tokens
+  /ghp_[A-Za-z0-9]{36}/g,
+  // GitLab personal access tokens
+  /glpat-[A-Za-z0-9_-]{20,}/g,
+] as const
+
+/**
+ * Redact common secret patterns from text.
+ * Replaces values matching known secret formats with [REDACTED].
+ */
+function redactSecrets(text: string): string {
+  let result = text
+  for (const pattern of SECRET_PATTERNS) {
+    result = result.replace(pattern, (match, secret: string) => {
+      // Replace the captured secret value with [REDACTED]
+      if (secret) {
+        return match.replace(secret, '[REDACTED]')
+      }
+      return match
+    })
+  }
+  return result
+}
+
 function estimateTokens(text: string): number {
   return Math.ceil(text.length / AVG_CHARS_PER_TOKEN)
 }
@@ -40,6 +77,19 @@ export class TaskBuilder {
   }
 
   build(contract: ExecutionContract, context: TaskContext): BuiltTask {
+    // Redact secrets from context before assembling prompt
+    const safeContext: TaskContext = {
+      projectSummary: redactSecrets(context.projectSummary),
+      previousPhases: context.previousPhases.map(redactSecrets),
+      architecture: context.architecture ? redactSecrets(context.architecture) : undefined,
+      constraints: context.constraints?.map(redactSecrets),
+      relevantMemory: context.relevantMemory
+        ? Object.fromEntries(
+            Object.entries(context.relevantMemory).map(([k, v]) => [k, redactSecrets(v)]),
+          )
+        : undefined,
+    }
+
     const lines: string[] = []
     let totalTokens = 0
 
@@ -67,42 +117,42 @@ export class TaskBuilder {
     }
 
     // Section: Project Summary (budget permitting)
-    if (context.projectSummary && estimateTokens(context.projectSummary) < availableBudget) {
+    if (safeContext.projectSummary && estimateTokens(safeContext.projectSummary) < availableBudget) {
       lines.push('### PROJECT SUMMARY')
       lines.push('')
-      lines.push(context.projectSummary)
+      lines.push(safeContext.projectSummary)
       lines.push('')
-      totalTokens += estimateTokens(context.projectSummary)
+      totalTokens += estimateTokens(safeContext.projectSummary)
     }
 
     // Section: Previous Phases (budget permitting)
-    if (context.previousPhases.length > 0) {
-      const phasesText = context.previousPhases.join('\n- ')
+    if (safeContext.previousPhases.length > 0) {
+      const phasesText = safeContext.previousPhases.join('\n- ')
       if (estimateTokens(phasesText) < availableBudget) {
         lines.push('### PREVIOUS PHASES')
         lines.push('')
-        lines.push(context.previousPhases.length > 0 ? context.previousPhases.map((p) => `- ${p}`).join('\n') : '(none)')
+        lines.push(safeContext.previousPhases.map((p) => `- ${p}`).join('\n'))
         lines.push('')
         totalTokens += estimateTokens(phasesText)
       }
     }
 
     // Section: Architecture (budget permitting)
-    if (context.architecture && estimateTokens(context.architecture) < availableBudget) {
+    if (safeContext.architecture && estimateTokens(safeContext.architecture) < availableBudget) {
       lines.push('### ARCHITECTURE')
       lines.push('')
-      lines.push(context.architecture)
+      lines.push(safeContext.architecture)
       lines.push('')
-      totalTokens += estimateTokens(context.architecture)
+      totalTokens += estimateTokens(safeContext.architecture)
     }
 
     // Section: Constraints (budget permitting)
-    if (context.constraints?.length && estimateTokens(context.constraints.join('\n')) < availableBudget) {
+    if (safeContext.constraints?.length && estimateTokens(safeContext.constraints.join('\n')) < availableBudget) {
       lines.push('### CONSTRAINTS')
       lines.push('')
-      lines.push(context.constraints.map((c) => `- ${c}`).join('\n'))
+      lines.push(safeContext.constraints.map((c) => `- ${c}`).join('\n'))
       lines.push('')
-      totalTokens += estimateTokens(context.constraints.join('\n'))
+      totalTokens += estimateTokens(safeContext.constraints.join('\n'))
     }
 
     // Section: Allowed Paths (always)

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { OpenCodeAdapter } from '../../src/agent/opencode-adapter.js'
 import type { ExecutionContract } from '../../src/agent/execution-contract.js'
 import { buildOpenCodePrompt } from '../../src/agent/opencode-prompt-builder.js'
