@@ -1,5 +1,24 @@
 import { Job, PersistentQueue } from './queue.js';
 
+const SECRET_PATTERNS = [
+  /api[_-]?key\s*[:=]\s*\S+/gi,
+  /password\s*[:=]\s*\S+/gi,
+  /token\s*[:=]\s*\S+/gi,
+  /bearer\s+\S+/gi,
+  /-----BEGIN\s+(RSA|EC|OPENSSH)\s+PRIVATE\s+KEY-----/gi,
+  /ghp_[A-Za-z0-9]{36}/g,
+] as const
+
+function redactSecrets(text: string): string {
+  let result = text
+  for (const pattern of SECRET_PATTERNS) {
+    result = result.replace(pattern, (match) => {
+      return match.replace(/\S+$/, '[REDACTED]')
+    })
+  }
+  return result
+}
+
 export type JobHandler = (_job: Job) => Promise<void>;
 
 export interface SchedulerConfig {
@@ -104,7 +123,7 @@ export class Scheduler {
         this.dispatch(job);
       }
     } catch (error) {
-      console.error('Scheduler poll error:', error);
+      console.error('Scheduler poll error:', redactSecrets(String(error)));
     }
 
     // Schedule next poll

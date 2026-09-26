@@ -2,6 +2,7 @@ import Database from 'better-sqlite3';
 import { EventStore } from './event-store.js';
 import { StateMachine } from './state-machine.js';
 import { ProjectState } from './states.js';
+import { atomicTransition } from './atomic.js';
 
 export interface CreateProjectInput {
   name: string;
@@ -167,6 +168,7 @@ export class ProjectManager {
 
   /**
    * Update project status with state machine validation.
+   * Uses atomicTransition to ensure state change and event are in one transaction.
    */
   updateStatus(id: string, newStatus: ProjectState): Project {
     const project = this.get(id);
@@ -176,13 +178,16 @@ export class ProjectManager {
 
     this.stateMachine.validateTransition(project.status, newStatus);
 
-    this.updateStatusStmt.run(newStatus, id);
-
-    // Append status changed event
-    this.eventStore.append({
+    // Use atomicTransition to ensure state update and event are in one transaction
+    atomicTransition(this.db, this.eventStore, {
       type: 'project.status_changed',
       projectId: id,
+      fromState: project.status,
+      toState: newStatus,
+      entityType: 'project',
+      entityId: id,
       actor: 'system',
+      tableName: 'project_manager',
       payload: { from: project.status, to: newStatus },
     });
 
@@ -191,6 +196,7 @@ export class ProjectManager {
 
   /**
    * Soft delete a project (sets status to CANCELLED).
+   * Uses atomicTransition to ensure state change and event are in one transaction.
    */
   delete(id: string): void {
     const project = this.get(id);
@@ -198,13 +204,15 @@ export class ProjectManager {
       throw new Error(`Project ${id} not found`);
     }
 
-    this.softDeleteStmt.run(id);
-
-    // Append deleted event
-    this.eventStore.append({
+    atomicTransition(this.db, this.eventStore, {
       type: 'project.deleted',
       projectId: id,
+      fromState: project.status,
+      toState: ProjectState.CANCELLED,
+      entityType: 'project',
+      entityId: id,
       actor: 'system',
+      tableName: 'project_manager',
       payload: { previousStatus: project.status },
     });
   }

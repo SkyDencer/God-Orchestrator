@@ -11,6 +11,8 @@ export interface Transition {
   actor: string;
   projectId?: string;
   payload?: Record<string, unknown>;
+  /** Optional custom table name; defaults to `${entityType}s` */
+  tableName?: string;
 }
 
 /**
@@ -41,8 +43,8 @@ export function atomicTransition(
     eventStore.append(eventInput);
 
     // Step 2: Update entity state in the appropriate table
-    // Use dynamic table name based on entity type
-    const tableName = `${transition.entityType}s`;
+    // Use dynamic table name based on entity type, or custom tableName if provided
+    const tableName = transition.tableName ?? `${transition.entityType}s`;
     const updateSql = `
       UPDATE ${tableName}
       SET status = ?, updated_at = CURRENT_TIMESTAMP
