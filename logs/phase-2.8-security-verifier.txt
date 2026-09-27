@@ -1,0 +1,45 @@
+Phase 2.8 — Security Verifier — Test Log
+=========================================
+Date: 2026-09-27
+Subagent: verifier-2.8
+
+Command: npx vitest run tests/verification/security-verifier.test.ts --reporter=verbose
+Result: 27 passed, 0 failed (11 ms)
+
+Test output:
+  ✓ verifyNoSecretsInChanges > passes when diff is empty
+  ✓ verifyNoSecretsInChanges > passes on a clean diff with no secret patterns
+  ✓ verifyNoSecretsInChanges > fails when diff contains a real sk-* token
+  ✓ verifyNoSecretsInChanges > fails when diff contains a real ghp_ token
+  ✓ verifyNoSecretsInChanges > fails when diff contains an AKIA token (exactly 16 uppercase chars after prefix)
+  ✓ verifyNoSecretsInChanges > fails when diff contains an AIza token (exactly 30 chars after prefix)
+  ✓ verifyNoSecretsInChanges > fails when diff contains a sk-ant-* token
+  ✓ verifyNoSecretsInChanges > fails when diff contains an xoxb-* token
+  ✓ verifyNoSecretsInChanges > fails when diff contains an xoxp-* token
+  ✓ verifyNoSecretsInChanges > fails when diff contains a gho_ token
+  ✓ verifyNoSecretsInChanges > passes when diff contains only placeholder values
+  ✓ verifyNoSecretsInChanges > passes on a false-positive-style short token that does not meet minimum length
+  ✓ verifyNoForbiddenPaths > passes when no changed file matches a forbidden path
+  ✓ verifyNoForbiddenPaths > fails when a .env file is in changed files
+  ✓ verifyNoForbiddenPaths > fails when a secrets/ sub-path is changed
+  ✓ verifyNoForbiddenPaths > fails when a credentials/ path is changed
+  ✓ verifyNoForbiddenPaths > fails when a filename containing "key" is changed (*key* glob)
+  ✓ verifyNoForbiddenPaths > fails when id_rsa is changed
+  ✓ verifyNoForbiddenPaths > handles Windows-style backslash paths
+  ✓ verifyNoForbiddenPaths > matches .env.* glob patterns against .env.production
+  ✓ verifyNoSecretAccess > passes when logs are empty
+  ✓ verifyNoSecretAccess > passes on benign log lines
+  ✓ verifyNoSecretAccess > fails when a real sk-* token appears in logs
+  ✓ verifyNoSecretAccess > fails when a real ghp_ token appears in logs
+  ✓ verifyNoSecretAccess > fails when an AKIA token appears in logs
+  ✓ verifyNoSecretAccess > passes when only placeholders appear in logs
+  ✓ verifyNoSecretAccess > passes on a false-positive short token sk-abc in logs
+
+Lint: npx eslint src/verification/security-verifier.ts tests/verification/security-verifier.test.ts
+Result: 0 errors, 0 warnings
+
+Typecheck: npx tsc --noEmit
+Result: 0 errors
+
+Regression: npx vitest run tests/verification/evidence-store.test.ts
+Result: 13 passed, 0 failed (64 ms)
