@@ -1,0 +1,28 @@
+Phase 2.9 — Coverage Delta Verifier  |  2026-09-27
+====================================================
+
+Targeted test run:
+  command: npx vitest run tests/verification/coverage-verifier.test.ts
+  result:  11 passed / 0 failed  (55 ms)
+
+Test cases covered:
+  1. captures baseline from coverage-summary.json          PASS
+  2. captures baseline from coverage-final.json fallback   PASS
+  3. throws on captureBaseline with no report              PASS
+  4. returns passed for stable coverage (delta == 0)       PASS
+  5. returns passed when coverage increases                PASS
+  6. returns passed for small drop within 2 pp tolerance   PASS
+  7. returns failed for >2 pp drop                         PASS
+  8. returns failed for 10 pp drop                         PASS
+  9. returns inconclusive when report disappears after baseline  PASS
+  10. returns inconclusive when no report at all           PASS
+  11. prefers coverage-summary.json over coverage-final.json PASS
+
+Lint check:
+  command: npx eslint src/verification/coverage-verifier.ts tests/verification/coverage-verifier.test.ts
+  result:  0 errors, 0 warnings
+
+Type check (project-wide):
+  command: npx tsc --noEmit
+  result:  pre-existing error in src/verification/bypass-detector.ts only;
+           no new errors introduced by this subphase.
