@@ -1,0 +1,24 @@
+Phase 2 Acceptance Audit (mission 2.13) — test run log
+========================================================
+
+Command: npx vitest run tests/verification/phase-2-acceptance-audit.test.ts
+Date: 2026-09-27
+Result: 13 passed, 0 failed
+
+PASS tests/verification/phase-2-acceptance-audit.test.ts (13 tests) 147531ms
+  Phase 2 Acceptance Audit (2.13)
+    ✓ C1 — false-success rejected: dropping assertions in a test file causes pipeline failure 17892ms
+    ✓ C2 — evidence stored for every check: all evidence refs are queryable from the store 9832ms
+    ✓ C3 — reproducibility: same input yields same result on two runs 14870ms
+    ✓ C4 — failed test causes overall failure 10859ms
+    ✓ C5 — deleted test detected (adversarial): removing a test file causes test_integrity failure (INV-13) 13036ms
+    ✓ C6 — coverage drop detected: lowering coverage by > 2 pp causes coverage_delta failure 4688ms
+    ✓ C7 — bypass attempt rejected: deliberate stubbing of test file triggers bypass_prevention failure (INV-12) 13764ms
+    ✓ C8 — secret in diff rejected: adding a real secret token to a changed file fails security check 14975ms
+    ✓ C9 — clean test-integrity: unchanged fixture passes all checks 9080ms
+    ✓ INV-01 — pipeline never passes with zero checks 4475ms
+    ✓ INV-12 — bypass check present when beforeSnapshot is supplied 9085ms
+    ✓ INV-13 — full pipeline fails when a test file is deleted 14734ms
+    ✓ full clean pipeline: passes and every check has non-empty evidence 10239ms
+
+Lint: npx eslint tests/verification/phase-2-acceptance-audit.test.ts — PASS (no errors)
