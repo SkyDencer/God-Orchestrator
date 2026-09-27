@@ -1,0 +1,34 @@
+Subphase 2.6 — BuildVerifier
+Run date: 2026-09-27
+
+Command: npx vitest run tests/verification/build-verifier.test.ts --reporter=verbose
+Result: 6 passed, 0 failed
+
+Test output:
+  ✓ tests/verification/build-verifier.test.ts (6 tests) 9117ms
+    ✓ BuildVerifier > successful build command returns passed  1724ms
+    ✓ BuildVerifier > successful typecheck command returns passed  1629ms
+    ✓ BuildVerifier > build error returns failed with stderr captured in summary  1641ms
+    ✓ BuildVerifier > typecheck error on bad fixture returns failed with stderr  1633ms
+    ✓ BuildVerifier > rejects a shell-string build command as failed
+    ✓ BuildVerifier > real project tsc --noEmit returns failed due to pre-existing errors in other subphases  2485ms
+
+ESLint: npx eslint src/verification/build-verifier.ts tests/verification/build-verifier.test.ts — 0 errors, 0 warnings
+Typecheck (own file): npx tsc --noEmit | grep "build-verifier" — 0 errors
+Note: The full project typecheck has 37 pre-existing errors in src/verification/test-verifier.ts
+      and src/verification/acceptance-verifier.ts (from earlier subphases); none in build-verifier.ts.
+
+Regression suite (verification):
+Command: npx vitest run tests/verification/
+Result: 181 passed, 1 failed (11 test files, 182 tests)
+The one failure is in tests/verification/test-verifier.test.ts > "parses jest passing output correctly"
+       (expects 2 passed, gets 0) — pre-existing, unrelated to this subphase.
+
+Windows path finding:
+- npx was not in the Node.js spawn PATH (only in bash shell PATH).
+- node_modules/.bin/npx is a symlink, not a real binary.
+- node_modules/.bin/tsc is a .cmd wrapper on Windows — spawn('cmd', ['/c', <resolved-tsc-path>]) works.
+- stdout vs stderr: tsc emits errors to stdout on Windows via cmd /c, not stderr.
+  CommandVerifier.captureStderr returns '' for tsc errors; CommandVerifier.verify captures exit code correctly.
+  Fixtures use Windows-native paths (tests/fixtures/build-good, build-bad) to avoid the
+  "spawn cmd ENOENT" issue that occurs when cwd contains forward slashes on Windows.
