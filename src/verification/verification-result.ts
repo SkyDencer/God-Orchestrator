@@ -102,6 +102,62 @@ export interface CommandRequest {
 }
 
 /**
+ * A single check specification within a VerificationPlan.
+ */
+export interface VerificationPlanCheck {
+  /** Check name (e.g. 'git', 'build', 'test'). */
+  check: string;
+  /** Whether this check is required for an overall pass. Defaults to true. */
+  required?: boolean;
+}
+
+/**
+ * Plan that tells the VerificationPipeline which checks to run and which are required.
+ */
+export interface VerificationPlan {
+  /** Ordered list of check specifications. */
+  checks: VerificationPlanCheck[];
+}
+
+/**
+ * A composite acceptance criterion containing multiple sub-criteria.
+ * Defined here to avoid a circular dependency with acceptance-verifier.ts.
+ */
+export interface CompositeCriterion {
+  type: 'composite';
+  payload: {
+    criteria: AcceptanceCriterion[];
+    label?: string;
+  };
+}
+
+/**
+ * Union type accepted by the acceptance verifier — single criterion or composite.
+ */
+export type PipelineAcceptanceInput = AcceptanceCriterion | CompositeCriterion;
+
+/**
+ * Contract passed to VerificationPipeline.run(). Carries runtime configuration
+ * for the pipeline (commands, acceptance criteria, baseline snapshots, etc.).
+ */
+export interface PipelineContract {
+  /** Absolute path to the project root. */
+  projectRoot: string;
+  /** Build command to run; when omitted the build check is skipped. */
+  buildCommand?: CommandRequest;
+  /** Test command to run; when omitted the test check is skipped. */
+  testCommand?: CommandRequest;
+  /** Lint command to run; when omitted the lint check is skipped. */
+  lintCommand?: CommandRequest;
+  /** TypeScript typecheck command to run; when omitted the typecheck check is skipped. */
+  typecheckCommand?: CommandRequest;
+  /** Acceptance criteria to evaluate; when omitted the acceptance check is skipped. */
+  acceptanceCriteria?: PipelineAcceptanceInput[];
+  /** Snapshot captured before the current change (used by coverage_delta and test_integrity). */
+  beforeSnapshot?: TestSnapshot;
+}
+
+/**
  * Snapshot of a test-run count for drop-detection across runs.
  */
 export interface TestCountSnapshot {

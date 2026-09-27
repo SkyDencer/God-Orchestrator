@@ -1,0 +1,51 @@
+# Phase 2.12 — Verification Pipeline — Test Run Log
+# Date: 2026-09-27
+
+## Test command
+```
+npx vitest run tests/verification/pipeline.test.ts
+```
+
+## Result
+13 passed, 0 failed (178.29s total)
+
+## Individual test results
+1. ✓ full pipeline on a clean fixture project returns passed            26265ms
+2. ✓ pipeline with a failing test returns failed                       23289ms
+3. ✓ pipeline with a deleted test returns failed (via test_integrity)  16999ms
+4. ✓ pipeline with a secret in the diff returns failed (via security)  17125ms
+5. ✓ pipeline returns inconclusive when a required check is
+      inconclusive with no fallback                                    7154ms
+6. ✓ every check stores evidence through the EvidenceStore             7175ms
+7. ✓ pipeline evaluates acceptance criteria from the contract          5603ms
+8. ✓ overall is failed when any required check fails                  16448ms
+9. ✓ never passes when a required check is missing or failing
+      (INV-01, INV-12)                                               17598ms
+10. ✓ checks execute in canonical order                                8454ms
+11. ✓ semantic check is not run by default                             7032ms
+12. ✓ semantic check runs when explicitly requested                    5910ms
+13. ✓ only the checks listed in the plan are run                       8458ms
+
+## All verification tests (regression check)
+```
+npx vitest run tests/verification/
+```
+12 test files, 195 passed, 0 failed (168.66s total)
+
+## Key fix discovered during development
+The vitest runner on Windows outputs ANSI color codes (e.g. [32m✓[39m) which
+broke the regex-based parsers in TestVerifier.parseVitest() / parseSummaryLines().
+Root-cause: process.stdout capture via ProcessManager preserved the ANSI sequences
+from vitest's TTY detection. Fix: strip ANSI escape sequences in TestVerifier.verify()
+before passing output to the parser.
+See: src/verification/test-verifier.ts line 71-73
+
+## Notes
+- All integration tests use a real temp fixture project (git repo + package.json
+  + vitest.config.ts + src/math.ts + tests/math.test.ts) created in-process.
+- The fixture's node_modules/.bin/vitest.cmd is used directly (bypasses npx PATH
+  issues on Windows).
+- A synthetic coverage-summary.json is written into the fixture so coverage_delta
+  is not inconclusive in the "clean → passed" path.
+- The "inconclusive" test deliberately deletes the coverage-summary.json after
+  fixture creation so coverage_delta has no report to read.

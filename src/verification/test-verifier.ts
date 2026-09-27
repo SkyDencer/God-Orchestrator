@@ -68,8 +68,11 @@ export class TestVerifier {
       };
     }
 
+    // Strip ANSI escape sequences so regex-based parsers work on colored terminal output.
+    const ansiRe = new RegExp('\x1b' + '\\[[0-9;]*[mGKHHF]|\\x1b' + '\\[[0-9;]*[a-zA-Z]', 'g');
+    const plainText = stdout.replace(ansiRe, '');
     const framework = this.detectFramework();
-    const parsed = this.parseTestOutput(stdout);
+    const parsed = this.parseTestOutput(plainText);
     const findings: string[] = [];
 
     // Rule: any failing test is a failed check.

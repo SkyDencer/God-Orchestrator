@@ -12,5 +12,9 @@ export {
   type TestSnapshot,
   type TestCountSnapshot,
   type CommandRequest,
+  type VerificationPlan,
+  type VerificationPlanCheck,
+  type PipelineContract,
 } from './verification-result.js';
 export { AcceptanceVerifier, type AcceptanceInput } from './acceptance-verifier.js';
+export { VerificationPipeline } from './pipeline.js';
