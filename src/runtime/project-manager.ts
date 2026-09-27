@@ -188,7 +188,7 @@ export class ProjectManager {
       entityId: id,
       actor: 'system',
       tableName: 'project_manager',
-      payload: { from: project.status, to: newStatus },
+      payload: { previousStatus: project.status, newStatus },
     });
 
     return this.get(id)!;
@@ -213,7 +213,7 @@ export class ProjectManager {
       entityId: id,
       actor: 'system',
       tableName: 'project_manager',
-      payload: { previousStatus: project.status },
+      payload: { projectId: id, finalStatus: ProjectState.CANCELLED },
     });
   }
 
