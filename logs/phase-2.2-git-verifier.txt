@@ -1,0 +1,25 @@
+Subphase 2.2 — Git Verifier
+Run date: 2026-09-27
+Command: npx vitest run tests/verification/git-verifier.test.ts
+Result: 15 passed, 0 failed
+
+Test output:
+  ✓ tests/verification/git-verifier.test.ts (15 tests) 3288ms
+    ✓ GitVerifier > verify() on a clean repo returns passed with clean-status evidence text
+    ✓ GitVerifier > verify() on a dirty repo records status text in evidence (not a failure)
+    ✓ GitVerifier > getDiff captures the diff of uncommitted changes
+    ✓ GitVerifier > getLog returns recent commits
+    ✓ GitVerifier > getLog respects the limit parameter
+    ✓ GitVerifier > getChangedFiles returns only modified tracked files after a change
+    ✓ GitVerifier > getChangedFiles is empty on a clean repo
+    ✓ GitVerifier > getForbiddenChanges detects a change to a forbidden path
+    ✓ GitVerifier > getForbiddenChanges returns empty when no forbidden paths are touched
+    ✓ GitVerifier > getForbiddenChanges returns empty when given an empty array
+    ✓ GitVerifier > getForbiddenChanges matches path suffixes
+    ✓ GitVerifier > verify() attaches evidence rows when an EvidenceStore is supplied
+    ✓ GitVerifier > verify() on a clean repo stores clean-status evidence
+    ✓ GitVerifier > projectRoot is resolved to an absolute path
+    ✓ GitVerifier > projectRoot resolves relative paths to absolute
+
+Lint: npx eslint src/verification/git-verifier.ts tests/verification/git-verifier.test.ts — 0 errors
+Typecheck: npx tsc --noEmit — 0 errors (verified)
