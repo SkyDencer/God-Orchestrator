@@ -3,7 +3,8 @@
 **Date:** 2026-09-25
 **Status:** PASS
 **Repository:** C:/Users/PC-1/Desktop/projects/_god-orchestrator-feasibility/as-007
-**Commits:** 498a0c5, 243bb6f, additional commits
+**Commits:** 498a0c5, a15b63d [corrected 2026-09-27], additional commits
+> Note: original summary cited commit 243bb6f for schema-validation evidence, but the file as-007-schema-validation.json was introduced in commit a15b63d ("feat: AS-007 crash recovery and schema validation"). This was corrected on 2026-09-27.
 
 ## Executive Summary
 
@@ -140,10 +141,10 @@ All core capabilities verified: planning, contracting, execution, evidence colle
 
 ### T-schema: Zod Schema Validation
 - **Schema:** DecisionSchema with decision, rationale, next_phase_id
-- **Validations:**
-  - P001: VALID ✅
-  - P002: VALID ✅
-  - P003: VALID ✅
+- **Field validations performed:**
+  - `decision`: string enum check (COMPLETE | RETRY) — all 3 decisions valid
+  - `rationale`: non-empty string check — all 3 decisions valid
+  - `next_phase_id`: string | number check — all 3 decisions valid
 - **Result:** All decisions conform to schema
 - **Output:** `logs/as-007-schema-validation.json`
 
@@ -198,7 +199,7 @@ app.listen(PORT, () => {
 
 1. **Loop works end-to-end:** Plan → Contract → Execute → Evidence → Decide → Validate
 2. **God decisions are traceable:** All decisions saved with rationale
-3. **Schema validation works:** Zod correctly validates all decision outputs
+3. **Schema validation works:** Zod correctly validates all decision outputs (decision, rationale, next_phase_id fields)
 4. **Agent execution reliable:** OpenCode successfully creates and modifies code
 5. **Evidence collection comprehensive:** Git status, diffs, file lists captured
 6. **Crash recovery feasible:** Session persistence + filesystem state
@@ -233,7 +234,7 @@ app.listen(PORT, () => {
 | `logs/as-007-validation-p001.json` | P001 validation |
 | `logs/as-007-validation-p002.json` | P002 validation |
 | `logs/as-007-validation-p003.json` | P003 validation |
-| `logs/as-007-schema-validation.json` | Schema validation result |
+| `logs/as-007-schema-validation.json` | Schema validation result (corrected: commit a15b63d) |
 | `logs/as-007-crash-recovery.log` | Crash recovery analysis |
 | `mini-rest-api/server.js` | Final server implementation |
 | `mini-rest-api/package.json` | Project dependencies |
