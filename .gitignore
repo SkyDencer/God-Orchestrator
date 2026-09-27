@@ -10,3 +10,6 @@ coverage/
 *.db-shm
 # Test sources are tracked on purpose: losing or deleting a test is a security
 # incident, not a refactor (Golden Rule 18), so they must live in version control.
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+
