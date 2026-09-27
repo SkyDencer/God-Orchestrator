@@ -231,7 +231,7 @@ describe('Scheduler', () => {
       await scheduler2.stop();
 
       // Jobs enqueued after restart should have been processed
-      expect(processed).toBeGreaterThanOrEqual(2);
+      expect(processed).toBe(2);
     } finally {
       db.close();
       fs.rmSync(tmpPath, { recursive: true, force: true });
