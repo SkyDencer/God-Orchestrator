@@ -23,7 +23,11 @@ export function reconcile(db: Database.Database): ReconciliationResult {
   let recommendedAction: ReconciliationResult['recommendedAction'];
   let reasoning: string;
 
-  if (staleRuns > 0 && uncommittedChanges > 0) {
+  const repeatedFingerprint = getRepeatedErrorFingerprint(db);
+  if (repeatedFingerprint) {
+    recommendedAction = 'block';
+    reasoning = `Error fingerprint "${repeatedFingerprint.fingerprint}" has occurred ${repeatedFingerprint.count} times across runs. Recommend blocking until the recurring failure is investigated and resolved.`;
+  } else if (staleRuns > 0 && uncommittedChanges > 0) {
     recommendedAction = 'block';
     reasoning = `Found ${staleRuns} stale runs and ${uncommittedChanges} uncommitted changes. Recommend blocking until manual review resolves both issues.`;
   } else if (staleRuns > 0) {
@@ -135,4 +139,24 @@ function getLastValidState(db: Database.Database): string | null {
   } catch {
     return null;
   }
+}
+
+function getRepeatedErrorFingerprint(
+  db: Database.Database,
+): { fingerprint: string; count: number } | null {
+  try {
+    const row = db.prepare(`
+      SELECT error_code, occurrence_count
+      FROM error_fingerprints
+      WHERE occurrence_count >= 3
+      ORDER BY occurrence_count DESC
+      LIMIT 1
+    `).get() as { error_code: string; occurrence_count: number } | undefined;
+    if (row) {
+      return { fingerprint: row.error_code, count: row.occurrence_count };
+    }
+  } catch {
+    // Table may not exist yet
+  }
+  return null;
 }
