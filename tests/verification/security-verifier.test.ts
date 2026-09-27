@@ -85,7 +85,7 @@ describe('verifyNoSecretsInChanges', () => {
     const diff = [
       'diff --git a/slack.ts b/slack.ts',
       '+++ b/slack.ts',
-      '+export const BOT_TOKEN = "xoxb-123456789012-1234567890123-AbCdEfGhIjKlMnOpQrStUvWx";',
+      '+export const BOT_TOKEN = "xoxb-THEQUICKBROWNFOXJUMPSOVERTHELAZYDOG";',
     ].join('\n');
     const result = await verifier.verifyNoSecretsInChanges(diff);
     expect(result.status).toBe('failed');

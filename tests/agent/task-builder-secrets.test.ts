@@ -26,7 +26,7 @@ describe('redactSecrets', () => {
   })
 
   it('redacts xoxb-* prefixed secrets', () => {
-    const result = redactSecrets('xoxb-123456789012-1234567890123-abcdefghijklmnopqrstuvwx')
+    const result = redactSecrets('xoxb-FAKE-BOT-TEST-VALUE')
     expect(result).toBe('***REDACTED***')
   })
 
