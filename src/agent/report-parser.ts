@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import * as fs from 'node:fs'
+import { execSync } from 'node:child_process'
 
 export const AgentReportSchema = z.object({
   status: z.enum(['completed', 'failed', 'partial', 'blocked']),
@@ -44,7 +45,12 @@ export class ReportParser {
    * 4. Filesystem fallback — read cached report from the agent's output directory.
    * 5. Fallback — construct minimal report from exit code + stderr.
    */
-  parse(stdout: string, stderr: string, exitCode: number | null): AgentReport {
+  parse(
+    stdout: string,
+    stderr: string,
+    exitCode: number | null,
+    workingDir?: string,
+  ): AgentReport {
     // Strategy 1: Native JSON
     try {
       const parsed = JSON.parse(stdout)
@@ -94,7 +100,7 @@ export class ReportParser {
     if (fsReport) return fsReport
 
     // Strategy 5: Fallback — construct minimal report from exit code + stderr
-    return this.fallbackReport(stdout, stderr, exitCode)
+    return this.fallbackReport(stdout, stderr, exitCode, workingDir)
   }
 
   /**
@@ -204,11 +210,13 @@ export class ReportParser {
 
   /**
    * Fallback report when no structured output is found.
+   * When workingDir is provided, attempts to read git status to populate filesChanged.
    */
   private fallbackReport(
     stdout: string,
     stderr: string,
     exitCode: number | null,
+    workingDir?: string,
   ): AgentReport {
     const status = exitCodeToStatus(exitCode)
     const summaryParts = [
@@ -226,11 +234,59 @@ export class ReportParser {
     return {
       status,
       summary: summaryParts.join('\n'),
-      filesChanged: [],
+      filesChanged: workingDir
+        ? this.readFilesChangedFromGit(workingDir)
+        : [],
       testsRun: [],
       errors: stderr ? [stderr.slice(0, 500)] : [],
       durationMs: undefined,
       tokensUsed: undefined,
+    }
+  }
+
+  /**
+   * Run `git status --porcelain` in workingDir and parse the output
+   * into a list of file changes. Returns an empty array on any error.
+   */
+  private readFilesChangedFromGit(workingDir: string): AgentReport['filesChanged'] {
+    try {
+      const isWindows = process.platform === 'win32'
+      const command = isWindows
+        ? `cmd /c git status --porcelain`
+        : 'git status --porcelain'
+      const stdout = execSync(command, {
+        cwd: workingDir,
+        encoding: 'utf8',
+        maxBuffer: 10 * 1024 * 1024,
+      })
+      const filesChanged: AgentReport['filesChanged'] = []
+      for (const line of stdout.split('\n')) {
+        const trimmed = line.trim()
+        if (!trimmed) continue
+        const match = trimmed.match(/^.{2} (.+)$/)
+        if (!match) continue
+        let path = match![1]!.trim()
+        // Handle rename notation: "old -> new"
+        const renameIdx = path.indexOf(' -> ')
+        if (renameIdx !== -1) {
+          path = path.slice(renameIdx + 4)
+        }
+        const staged = trimmed[0]!
+        const working = trimmed[1]!
+        const effective = working !== ' ' ? working : staged
+        let action: 'created' | 'modified' | 'deleted'
+        if (effective === 'A' || effective === '?') {
+          action = 'created'
+        } else if (effective === 'D') {
+          action = 'deleted'
+        } else {
+          action = 'modified'
+        }
+        filesChanged.push({ path, action })
+      }
+      return filesChanged
+    } catch {
+      return []
     }
   }
 
