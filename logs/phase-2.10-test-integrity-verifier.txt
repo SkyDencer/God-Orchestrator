@@ -1,0 +1,43 @@
+Phase 2.10 — Test Integrity Verifier (Rule 18, INV-13)
+=======================================================
+Date: 2026-09-27
+
+BUILD COMMANDS
+--------------
+$ npx vitest run tests/verification/test-integrity-verifier.test.ts
+$ npx eslint src/verification/test-integrity-verifier.ts tests/verification/test-integrity-verifier.test.ts
+$ npx tsc --noEmit
+
+VITEST OUTPUT
+-------------
+ PASS  tests/verification/test-integrity-verifier.test.ts (7 tests)  47215ms
+   ✓ captures a snapshot with correct file list, hashes, assertion counts and skip counts  4005ms
+   ✓ returns passed when nothing changed between snapshots                              9819ms
+   ✓ fails when a test file is deleted                                                 3671ms
+   ✓ adversarial: delete real test → fail; restore → pass                              7791ms
+   ✓ fails when assertion count drops                                                  6227ms
+   ✓ fails when skip count increases                                                   8749ms
+   ✓ fails when test config changes                                                    6951ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  10:38:10
+   Duration  47.76s
+
+LINT OUTPUT
+-----------
+$ npx eslint src/verification/test-integrity-verifier.ts tests/verification/test-integrity-verifier.test.ts
+(no output → clean)
+
+TYPECHECK OUTPUT
+----------------
+$ npx tsc --noEmit
+(no output → clean)
+
+FILES CREATED
+-------------
+src/verification/test-integrity-verifier.ts
+src/verification/index.ts           (added export)
+tests/verification/test-integrity-verifier.test.ts
+logs/phase-2.10-test-integrity-verifier.txt
+docs/reports/phase-2.10-2026-09-27.md
