@@ -1,0 +1,28 @@
+Subphase 2.4 — CommandVerifier
+Run date: 2026-09-27
+
+Command: npx vitest run tests/verification/command-verifier.test.ts --reporter=verbose
+Result: 13 passed, 0 failed
+
+Test output:
+  ✓ tests/verification/command-verifier.test.ts (13 tests) 4428ms
+    ✓ CommandVerifier > exit 0 as expected → passed
+    ✓ CommandVerifier > non-zero exit code → failed with mismatch in summary
+    ✓ CommandVerifier > timeout handled — process killed, returns failed check  4055ms
+    ✓ CommandVerifier > arbitrary shell-string request rejected as failed check
+    ✓ CommandVerifier > an arg containing "&&" is rejected as failed check
+    ✓ CommandVerifier > captureStdout returns stdout from a successful command
+    ✓ CommandVerifier > captureStderr returns stderr from a failing command
+    ✓ CommandVerifier > captureStdout rejects a shell-string request and returns empty string
+    ✓ CommandVerifier > captureStderr rejects an arg with shell metacharacters and returns empty string
+    ✓ CommandVerifier > validate accepts a well-formed CommandRequest
+    ✓ CommandVerifier > validate rejects a plain string
+    ✓ CommandVerifier > validate rejects an arg containing ||
+    ✓ CommandVerifier > validate rejects an executable containing ;
+
+Full verification suite (no regression):
+Command: npx vitest run tests/verification/ --reporter=verbose
+Result: 136 passed (8 test files), 0 failed
+
+ESLint: npx eslint src/verification/command-verifier.ts tests/verification/command-verifier.test.ts — 0 errors, 0 warnings
+Typecheck: npx tsc --noEmit — 0 errors
