@@ -1,0 +1,14 @@
+[2026-09-27T00:00:00.000Z] [2.0] [PASS] [1b4aaff] fix: force absolute paths in ProcessManager and TaskBuilder on Windows — 6 new tests, all pass
+[2026-09-27T00:00:00.000Z] [2.1] [PASS] [8b45abe] feat: add evidence model and immutable evidence store — 13 new tests, lint/typecheck clean
+[2026-09-27T00:00:00.000Z] [2.2] [PASS] [8e14e25] feat: add git verifier with forbidden path detection — 15 new tests, all structured spawn
+[2026-09-27T00:00:00.000Z] [2.3] [PASS] [3fcc073] feat: add file verifier with path traversal protection — 24 new tests, path traversal returns failed check not exception
+[2026-09-27T00:00:00.000Z] [2.4] [PASS] [e70eb5c] feat: add command verifier with structured command enforcement — 13 new tests, shell-string rejection verified
+[2026-09-27T00:00:00.000Z] [2.5] [PASS] [efe7ca7] feat: add test verifier with multi-framework parsing — 14 new tests, vitest/jest/mocha/pytest/cargo parsers
+[2026-09-27T00:00:00.000Z] [2.6] [PASS] [d9435c1] feat: add build verifier — 6 new tests, Windows tsc stdout/stderr nuance resolved
+[2026-09-27T00:00:00.000Z] [2.7] [PASS] [6cc28d0] feat: add acceptance verifier with multi-type criteria support — 26 new tests, additive extension only
+[2026-09-27T00:00:00.000Z] [2.8] [PASS] [2ead924] feat: add security verifier with secret scanning — 27 new tests, all fake tokens, no real secrets
+[2026-09-27T00:00:00.000Z] [2.9] [PASS] [757714f] feat: add coverage delta verifier — 11 new tests, -2 pp threshold implemented
+[2026-09-27T00:00:00.000Z] [2.10] [PASS] [96b0672] feat: add test integrity verifier with adversarial tests — 7 new tests, physical file deletion test included
+[2026-09-27T00:00:00.000Z] [2.11] [PASS] [408a631] feat: add bypass detector with six detection strategies — 26 new tests, deterministic ordering verified
+[2026-09-27T00:00:00.000Z] [2.12] [PASS] [8256bb9] feat: add verification pipeline with evidence for every check — 13 new tests, 11-check canonical order, ANSI bug fixed
+[2026-09-27T00:00:00.000Z] [2.13] [PASS] [540dc11] docs: phase 2 completion report with acceptance evidence — 13 audit tests, 9/9 criteria passed
