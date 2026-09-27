@@ -21,40 +21,44 @@ export interface BuiltTask {
 const AVG_CHARS_PER_TOKEN = 4
 
 const SECRET_PATTERNS = [
-  // Match "api key", "apikey", "api_key", "api-key" followed by : or = and a secret value
-  /(?:api\s*[_-]?key|apikey)\s*[:=]\s*['"]?([^\s'"]{8,})['"]?/gi,
-  /(?:api\s*[_-]?secret|apisecret)\s*[:=]\s*['"]?([^\s'"]{8,})['"]?/gi,
-  /(?:secret[_-]?key|secretkey)\s*[:=]\s*['"]?([^\s'"]{8,})['"]?/gi,
-  // Password patterns
-  /(?:password|passwd|pwd)\s*[:=]\s*['"]?([^\s'"]{4,})['"]?/gi,
-  // Token patterns
-  /(?:token|auth[_-]?token|access[_-]?token|bearer)\s*[:=]\s*['"]?([^\s'"]{8,})['"]?/gi,
-  // AWS credentials
-  /(?:aws[_-]?access[_-]?key[_-]?id|aws[_-]?secret[_-]?access[_-]?key)\s*[:=]\s*['"]?([^\s'"]{8,})['"]?/gi,
-  // Private keys
-  /-----BEGIN\s+(RSA|EC|OPENSSH)\s+PRIVATE\s+KEY-----/gi,
-  // GitHub personal access tokens
-  /ghp_[A-Za-z0-9]{36}/g,
-  // GitLab personal access tokens
-  /glpat-[A-Za-z0-9_-]{20,}/g,
+  // Value-prefix patterns (most specific first)
+  /sk-ant-\S+/gi,
+  /sk-\S+/gi,
+  /ghp_[A-Za-z0-9_]{10,}/g,
+  /gho_[A-Za-z0-9_]{10,}/g,
+  /xoxb-\S+/gi,
+  /xoxp-\S+/gi,
+  /AKIA[A-Z0-9]{16}/g,
+  /AIza[A-Za-z0-9_-]{35}/g,
 ] as const
 
+const FIELD_SECRET_KEYS = /(?:password|token|secret|key|credential|auth|bearer)/i
+
 /**
- * Redact common secret patterns from text.
- * Replaces values matching known secret formats with [REDACTED].
+ * Redact common secret patterns and secret-valued fields from text.
+ * Replaces matched secret values with ***REDACTED***.
  */
-function redactSecrets(text: string): string {
+export function redactSecrets(text: string): string {
   let result = text
   for (const pattern of SECRET_PATTERNS) {
-    result = result.replace(pattern, (match, secret: string) => {
-      // Replace the captured secret value with [REDACTED]
-      if (secret) {
-        return match.replace(secret, '[REDACTED]')
-      }
-      return match
-    })
+    result = result.replace(pattern, '***REDACTED***')
   }
   return result
+}
+
+/**
+ * Redact values in a record whose keys match secret-sensitive field names.
+ */
+export function redactFieldSecrets(record: Record<string, string> | undefined): Record<string, string> | undefined {
+  if (!record) return undefined
+  return Object.fromEntries(
+    Object.entries(record).map(([k, v]) => {
+      if (FIELD_SECRET_KEYS.test(k)) {
+        return [k, '***REDACTED***']
+      }
+      return [k, v]
+    }),
+  )
 }
 
 function estimateTokens(text: string): number {
@@ -83,11 +87,13 @@ export class TaskBuilder {
       previousPhases: context.previousPhases.map(redactSecrets),
       architecture: context.architecture ? redactSecrets(context.architecture) : undefined,
       constraints: context.constraints?.map(redactSecrets),
-      relevantMemory: context.relevantMemory
-        ? Object.fromEntries(
-            Object.entries(context.relevantMemory).map(([k, v]) => [k, redactSecrets(v)]),
-          )
-        : undefined,
+      relevantMemory: redactFieldSecrets(
+        context.relevantMemory
+          ? Object.fromEntries(
+              Object.entries(context.relevantMemory).map(([k, v]) => [k, redactSecrets(v)]),
+            )
+          : undefined,
+      ),
     }
 
     const lines: string[] = []

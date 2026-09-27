@@ -1,4 +1,5 @@
 import type { ExecutionContract } from './execution-contract.js'
+import { redactSecrets } from './task-builder.js'
 
 /**
  * Builds an OpenCode prompt from an ExecutionContract.
@@ -26,13 +27,13 @@ export function buildOpenCodePrompt(contract: ExecutionContract): string {
 
   lines.push(`### OBJECTIVE`)
   lines.push('')
-  lines.push(contract.objective)
+  lines.push(redactSecrets(contract.objective))
   lines.push('')
 
   lines.push(`### ALLOWED PATHS`)
   lines.push('')
   if (contract.allowedPaths.length > 0) {
-    contract.allowedPaths.forEach((p) => lines.push(`- ${p}`))
+    contract.allowedPaths.forEach((p) => lines.push(`- ${redactSecrets(p)}`))
   } else {
     lines.push('(none specified — all project paths allowed)')
   }
@@ -41,7 +42,7 @@ export function buildOpenCodePrompt(contract: ExecutionContract): string {
   lines.push(`### FORBIDDEN PATHS`)
   lines.push('')
   if (contract.forbiddenPaths.length > 0) {
-    contract.forbiddenPaths.forEach((p) => lines.push(`- ${p}`))
+    contract.forbiddenPaths.forEach((p) => lines.push(`- ${redactSecrets(p)}`))
   } else {
     lines.push('(none specified)')
   }
@@ -49,13 +50,13 @@ export function buildOpenCodePrompt(contract: ExecutionContract): string {
 
   lines.push(`### ACCEPTANCE CRITERIA`)
   lines.push('')
-  contract.acceptanceCriteria.forEach((c) => lines.push(`- ${c}`))
+  contract.acceptanceCriteria.forEach((c) => lines.push(`- ${redactSecrets(c)}`))
   lines.push('')
 
   lines.push(`### EXPECTED OUTPUTS`)
   lines.push('')
   if (contract.expectedOutputs.length > 0) {
-    contract.expectedOutputs.forEach((o) => lines.push(`- ${o}`))
+    contract.expectedOutputs.forEach((o) => lines.push(`- ${redactSecrets(o)}`))
   } else {
     lines.push('(see acceptance criteria)')
   }

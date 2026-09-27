@@ -134,6 +134,6 @@ describe('TaskBuilder', () => {
     expect(built.prompt).not.toContain('sk-abc123xyz789')
     expect(built.prompt).not.toContain('ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef')
     expect(built.prompt).not.toContain('supersecret123')
-    expect(built.prompt).toContain('[REDACTED]')
+    expect(built.prompt).toContain('***REDACTED***')
   })
 })
