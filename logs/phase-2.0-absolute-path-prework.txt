@@ -1,0 +1,53 @@
+Phase 2.0 — Windows absolute-path pre-work (subphase 2.0)
+Date: 2026-09-27
+
+=== Targeted test run ===
+Command: npx vitest run tests/agent/process-manager-cwd.test.ts tests/agent/process-manager-windows.test.ts tests/agent/task-builder.test.ts --reporter=verbose
+
+Result: 3 passed | 23 passed (23) | Duration: 9.78s
+
+Test breakdown:
+  tests/agent/task-builder.test.ts — 14 passed
+    includes objective in prompt
+    includes allowed paths (now asserts absolute paths)
+    includes forbidden paths (now asserts absolute paths)
+    includes acceptance criteria
+    includes expected outputs
+    includes project summary when budget allows
+    includes previous phases
+    includes architecture when provided
+    includes constraints when provided
+    respects budget — truncates large sections
+    metadata contains contract fields
+    does not include out-of-scope memory fields
+    handles empty context gracefully
+    redacts secrets from context
+
+  tests/agent/process-manager-cwd.test.ts — 6 passed (NEW)
+    cmd wrapper resolves relative cwd to absolute on spawn
+    cmd wrapper passes absolute paths for relative executables
+    cmd wrapper resolves relative path args to absolute
+    spawn without cmd wrapper still uses resolved cwd
+    cmd wrapper with already-absolute cwd leaves it unchanged
+    cmd wrapper resolves relative args containing path separators
+
+  tests/agent/process-manager-windows.test.ts — 3 passed (EXISTING, no regression)
+    cmd /c wrapper works for simple commands
+    cmd /c wrapper works for taskkill tree (graceful) [9.1s]
+    spawn via cmd /c with chained commands
+
+=== Lint ===
+Command: npx eslint src/agent/process-manager.ts src/agent/task-builder.ts tests/agent/process-manager-cwd.test.ts tests/agent/task-builder.test.ts
+Result: clean (no output)
+
+=== Files modified ===
+1. src/agent/process-manager.ts — added path.resolve() for cwd and path-like args when useCmdWrapper=true
+2. src/agent/task-builder.ts — added toAbsolutePaths() and emits absolute paths in ALLOWED PATHS / FORBIDDEN PATHS sections
+3. tests/agent/task-builder.test.ts — updated allowed/forbidden path assertions to expect absolute paths
+
+=== Files created ===
+4. tests/agent/process-manager-cwd.test.ts — 6 tests proving absolute-path behaviour
+
+=== Known pre-existing issue (unchanged) ===
+src/agent/task-builder.ts(41,8): TS1030 duplicate export outside scope
+— pre-existing, not in scope of this subphase.

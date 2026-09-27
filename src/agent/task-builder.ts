@@ -1,4 +1,5 @@
 import type { ExecutionContract } from './execution-contract.js'
+import * as path from 'node:path'
 
 export interface TaskContext {
   projectSummary: string
@@ -61,6 +62,15 @@ export function redactFieldSecrets(record: Record<string, string> | undefined): 
   )
 }
 
+/**
+ * Resolve a list of paths to absolute paths relative to the current working directory.
+ * Already-absolute paths are left untouched.
+ */
+function toAbsolutePaths(paths: string[]): string[] {
+  const cwd = process.cwd()
+  return paths.map((p) => (path.isAbsolute(p) ? p : path.resolve(cwd, p)))
+}
+
 function estimateTokens(text: string): number {
   return Math.ceil(text.length / AVG_CHARS_PER_TOKEN)
 }
@@ -95,6 +105,11 @@ export class TaskBuilder {
           : undefined,
       ),
     }
+
+    // Always emit absolute paths so the agent can resolve them unambiguously
+    // regardless of spawn cwd (Phase 0.9 finding B3: opencode CLI ignores cwd).
+    const absAllowedPaths = toAbsolutePaths(contract.allowedPaths)
+    const absForbiddenPaths = toAbsolutePaths(contract.forbiddenPaths)
 
     const lines: string[] = []
     let totalTokens = 0
@@ -161,27 +176,27 @@ export class TaskBuilder {
       totalTokens += estimateTokens(safeContext.constraints.join('\n'))
     }
 
-    // Section: Allowed Paths (always)
+    // Section: Allowed Paths (always) — emitted as absolute paths
     lines.push('### ALLOWED PATHS')
     lines.push('')
-    if (contract.allowedPaths.length > 0) {
-      lines.push(contract.allowedPaths.map((p) => `- ${p}`).join('\n'))
+    if (absAllowedPaths.length > 0) {
+      lines.push(absAllowedPaths.map((p) => `- ${p}`).join('\n'))
     } else {
       lines.push('(none specified — all project paths allowed)')
     }
     lines.push('')
-    totalTokens += estimateTokens(contract.allowedPaths.join('\n'))
+    totalTokens += estimateTokens(absAllowedPaths.join('\n'))
 
-    // Section: Forbidden Paths (always)
+    // Section: Forbidden Paths (always) — emitted as absolute paths
     lines.push('### FORBIDDEN PATHS')
     lines.push('')
-    if (contract.forbiddenPaths.length > 0) {
-      lines.push(contract.forbiddenPaths.map((p) => `- ${p}`).join('\n'))
+    if (absForbiddenPaths.length > 0) {
+      lines.push(absForbiddenPaths.map((p) => `- ${p}`).join('\n'))
     } else {
       lines.push('(none specified)')
     }
     lines.push('')
-    totalTokens += estimateTokens(contract.forbiddenPaths.join('\n'))
+    totalTokens += estimateTokens(absForbiddenPaths.join('\n'))
 
     // Section: Acceptance Criteria (always)
     lines.push('### ACCEPTANCE CRITERIA')

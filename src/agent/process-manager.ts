@@ -1,5 +1,6 @@
 import { spawn, type ChildProcess } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
+import * as path from 'node:path'
 
 export interface SpawnOptions {
   executable: string
@@ -26,6 +27,22 @@ function generateId(): string {
   return `proc-${++nextId}-${randomUUID()}`
 }
 
+/** Resolve a single arg to an absolute path if it looks like a relative file path. */
+function resolveArg(arg: string): string {
+  // Skip flags, URLs, and already-absolute paths
+  if (arg.startsWith('-') || arg.startsWith('http://') || arg.startsWith('https://')) {
+    return arg
+  }
+  if (path.isAbsolute(arg)) {
+    return arg
+  }
+  // Resolve relative paths (starts with . or contains path separators)
+  if (arg.startsWith('.') || arg.includes('/') || arg.includes('\\')) {
+    return path.resolve(arg)
+  }
+  return arg
+}
+
 export class ProcessManager {
   private readonly processes = new Map<string, ChildProcess>()
 
@@ -36,13 +53,25 @@ export class ProcessManager {
 
     const isWindows = process.platform === 'win32'
     const wrapper = options.useCmdWrapper ?? isWindows
-    const command = wrapper ? 'cmd' : options.executable
-    const args = wrapper
-      ? ['/c', options.executable, ...options.args]
+
+    // On Windows with cmd wrapper, resolve all path-like arguments to absolute paths
+    // to work around the opencode CLI ignoring spawn cwd (Phase 0.9 finding B3).
+    const resolvedCwd = path.resolve(options.cwd)
+    const resolvedExecutable = (wrapper && !path.isAbsolute(options.executable)
+      && (options.executable.startsWith('.') || options.executable.includes('/') || options.executable.includes('\\')))
+      ? path.resolve(resolvedCwd, options.executable)
+      : options.executable
+    const resolvedArgs = wrapper
+      ? options.args.map(resolveArg)
       : options.args
 
+    const command = wrapper ? 'cmd' : resolvedExecutable
+    const args = wrapper
+      ? ['/c', resolvedExecutable, ...resolvedArgs]
+      : resolvedArgs
+
     const child = spawn(command, args, {
-      cwd: options.cwd,
+      cwd: resolvedCwd,
       env: { ...process.env, ...options.env },
       stdio: ['ignore', 'pipe', 'pipe'],
     })

@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import * as path from 'node:path'
 import { TaskBuilder } from '../../src/agent/task-builder.js'
 import type { ExecutionContract } from '../../src/agent/execution-contract.js'
 import type { TaskContext } from '../../src/agent/task-builder.js'
@@ -38,14 +39,15 @@ describe('TaskBuilder', () => {
 
   it('includes allowed paths', () => {
     const built = builder.build(contract, context)
-    expect(built.prompt).toContain('src/auth/')
-    expect(built.prompt).toContain('src/routes/')
+    // Paths are emitted as absolute (Phase 2.0: opencode CLI ignores spawn cwd)
+    expect(built.prompt).toContain(path.resolve('src/auth/'))
+    expect(built.prompt).toContain(path.resolve('src/routes/'))
   })
 
   it('includes forbidden paths', () => {
     const built = builder.build(contract, context)
-    expect(built.prompt).toContain('config/secrets/')
-    expect(built.prompt).toContain('.git/')
+    expect(built.prompt).toContain(path.resolve('config/secrets/'))
+    expect(built.prompt).toContain(path.resolve('.git/'))
   })
 
   it('includes acceptance criteria', () => {
