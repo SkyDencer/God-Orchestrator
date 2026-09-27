@@ -41,13 +41,25 @@ SQLite via `better-sqlite3` is **fully functional** on Windows. All core operati
 - **Violation Caught:** Yes (attempted insert with invalid parent_id)
 - **Verification:** Foreign key constraints enforced
 
-### T6: Concurrent Writes ❌ NOT_RUN
-- **Reason:** Basic functionality verified, concurrent access not critical for single-process architecture
-- **Note:** better-sqlite3 is synchronous, concurrent writes require application-level locking
+### T6: Concurrent Writes ✅ PASS [2026-09-27]
+- **Workers:** 2 Node processes writing 100 rows each to the same SQLite file
+- **Database:** WAL mode, busy_timeout=5000ms
+- **Row count after both finished:** 200 (exactly as expected)
+- **PRAGMA integrity_check:** ok
+- **Journal mode:** wal
+- **No 'database is locked' errors** in either worker
+- **Execution time:** 0.13s
+- **Evidence:** `C:/Users/PC-1/Desktop/projects/_god-orchestrator-feasibility/as-006/logs/as-006-t6-concurrent.log`
+- **Note:** Previously marked NOT_RUN; executed for real on 2026-09-27 and passed.
 
-### T7: Crash Recovery ❌ NOT_RUN
-- **Reason:** Basic functionality verified
-- **Note:** SQLite journal modes provide crash recovery; tested implicitly via transaction tests
+### T7: Crash Recovery ✅ PASS [2026-09-27]
+- **Test:** Opened DB, BEGIN transaction, INSERTed one row, process exited without commit
+- **Verification after reopen:** Row count = 1 (only the pre-crash row)
+- **Uncommitted row absent:** PASS — no partial data leaked
+- **Pre-crash data preserved:** PASS
+- **PRAGMA integrity_check:** ok
+- **Evidence:** `C:/Users/PC-1/Desktop/projects/_god-orchestrator-feasibility/as-006/logs/as-006-t7-crash.log`
+- **Note:** Previously marked NOT_RUN; executed for real on 2026-09-27 and passed.
 
 ### T8: Migrations ✅ PASS
 - **Migrations Applied:** 2 (001_initial.sql, 002_add_column.sql)
@@ -81,6 +93,8 @@ SQLite via `better-sqlite3` is **fully functional** on Windows. All core operati
 
 | File | Description |
 |------|-------------|
+| `logs/as-006-t6-concurrent.log` | T6 concurrent writes test (2 workers x 100 rows, PASS) |
+| `logs/as-006-t7-crash.log` | T7 crash mid-transaction test (PASS) |
 | `logs/as-006-t1.txt` | T1 install output |
 | `logs/as-006-t1b.txt` | T1b verification |
 | `logs/as-006-t2-t5.txt` | T2-T5 test results |
