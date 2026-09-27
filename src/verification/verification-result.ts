@@ -100,3 +100,15 @@ export interface CommandRequest {
   cwd?: string;
   timeoutMs?: number;
 }
+
+/**
+ * Snapshot of a test-run count for drop-detection across runs.
+ */
+export interface TestCountSnapshot {
+  /** Total number of tests discovered/executed in this run. */
+  testCount: number;
+  passed: number;
+  failed: number;
+  /** ISO-8601 timestamp of capture. */
+  capturedAt: string;
+}

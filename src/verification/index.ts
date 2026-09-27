@@ -10,5 +10,7 @@ export {
   type AcceptanceCriterion,
   type AcceptanceCriterionPayload,
   type TestSnapshot,
+  type TestCountSnapshot,
   type CommandRequest,
 } from './verification-result.js';
+export { AcceptanceVerifier, type AcceptanceInput } from './acceptance-verifier.js';
