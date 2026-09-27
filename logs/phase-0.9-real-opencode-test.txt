@@ -1,0 +1,18 @@
+
+> god-orchestrator@0.0.1 test
+> vitest run tests/agent/opencode-adapter-real.test.ts --reporter=verbose
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mC:/Users/PC-1/Desktop/projects/God-Orchestrator[39m
+
+ [32m✓[39m tests/agent/opencode-adapter-real.test.ts[2m > [22mOpenCodeAdapter real process integration[2m > [22mexecuteTask spawns a real opencode process and returns a completed AgentRun[33m 21472[2mms[22m[39m
+ [32m✓[39m tests/agent/opencode-adapter-real.test.ts[2m > [22mOpenCodeAdapter real process integration[2m > [22mstdout/stderr are captured by the adapter (verified via ProcessManager proxy)[33m 35799[2mms[22m[39m
+ [32m✓[39m tests/agent/opencode-adapter-real.test.ts[2m > [22mOpenCodeAdapter real process integration[2m > [22mProcessManager tracks and can kill a real opencode process[33m 83137[2mms[22m[39m
+ [32m✓[39m tests/agent/opencode-adapter-real.test.ts[2m > [22mOpenCodeAdapter real process integration[2m > [22mstopSession kills running processes and transitions session to stopped[33m 1444[2mms[22m[39m
+ [32m✓[39m tests/agent/opencode-adapter-real.test.ts[2m > [22mOpenCodeAdapter real process integration[2m > [22mAgentRun is recorded in the adapter in-memory store with all required fields[33m 77763[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 04:40:03
+[2m   Duration [22m 220.54s[2m (transform 103ms, setup 0ms, collect 121ms, tests 219.76s, environment 0ms, prepare 153ms)[22m
+
