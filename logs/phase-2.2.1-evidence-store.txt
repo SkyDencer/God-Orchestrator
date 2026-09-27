@@ -1,0 +1,23 @@
+Subphase 2.1 — Evidence model + store + shared verification types
+Run date: 2026-09-27
+Command: npx vitest run tests/verification/evidence-store.test.ts
+Result: 13 passed, 0 failed
+
+Test output:
+  ✓ tests/verification/evidence-store.test.ts (13 tests) 64ms
+    ✓ EvidenceStore > stores small evidence in the DB with a correct hash
+    ✓ EvidenceStore > stores large evidence on disk and keeps hash in DB
+    ✓ EvidenceStore > getByRun returns all evidence for a run
+    ✓ EvidenceStore > getByType returns evidence across runs
+    ✓ EvidenceStore > verifyHash returns true for untampered small evidence
+    ✓ EvidenceStore > verifyHash returns true for untampered large evidence
+    ✓ EvidenceStore > verifyHash detects tampering of in-DB content
+    ✓ EvidenceStore > verifyHash detects tampering of on-disk content
+    ✓ EvidenceStore > verifyHash returns false for a non-existent id
+    ✓ EvidenceStore > delete removes the DB row and the disk file
+    ✓ EvidenceStore > delete is a no-op for a missing id
+    ✓ EvidenceStore > creates evidence with an explicit checkId
+    ✓ EvidenceStore > creates the filesystem root automatically on construction
+
+Lint: npx eslint src/verification/*.ts tests/verification/evidence-store.test.ts — 0 errors
+Typecheck: npx tsc --noEmit — 0 errors
