@@ -1,0 +1,46 @@
+Subphase 2.7 — AcceptanceVerifier
+Run date: 2026-09-27
+
+Commands run:
+  npx vitest run tests/verification/acceptance-verifier.test.ts --reporter=verbose
+  npx eslint src/verification/acceptance-verifier.ts tests/verification/acceptance-verifier.test.ts
+  npx tsc --noEmit
+
+Test result: 26 passed, 0 failed
+ESLint: 0 errors, 0 warnings
+Typecheck (my files only): 0 errors
+
+Test output:
+  ✓ tests/verification/acceptance-verifier.test.ts (26 tests) 4270ms
+    ✓ AcceptanceVerifier > type: command > passes when the command exits with the expected code
+    ✓ AcceptanceVerifier > type: command > fails when the command exits with a non-zero code
+    ✓ AcceptanceVerifier > type: command > rejects a missing command field as failed
+    ✓ AcceptanceVerifier > type: file_exists > passes when the file exists
+    ✓ AcceptanceVerifier > type: file_exists > fails when the file does not exist
+    ✓ AcceptanceVerifier > type: file_exists > fails when path is missing from payload
+    ✓ AcceptanceVerifier > type: file_contains > passes when the file contains the pattern
+    ✓ AcceptanceVerifier > type: file_contains > fails when the pattern is absent
+    ✓ AcceptanceVerifier > type: file_contains > fails when path or pattern is missing
+    ✓ AcceptanceVerifier > type: file_not_contains > passes when the pattern is absent
+    ✓ AcceptanceVerifier > type: file_not_contains > fails when the pattern IS present
+    ✓ AcceptanceVerifier > type: file_not_contains > fails when path or pattern is missing
+    ✓ AcceptanceVerifier > type: custom > passes with label and details
+    ✓ AcceptanceVerifier > type: custom > passes with only a label
+    ✓ AcceptanceVerifier > type: requirement_ref > is inconclusive when no requirement_ref is provided
+    ✓ AcceptanceVerifier > type: requirement_ref > is inconclusive when the project has no requirements records
+    ✓ AcceptanceVerifier > type: requirement_ref > is inconclusive when the ref format is malformed (no colon)
+    ✓ AcceptanceVerifier > type: requirement_ref > is inconclusive when the requirement ref is not found
+    ✓ AcceptanceVerifier > type: requirement_ref > passes when the requirement ref exists and resolves
+    ✓ AcceptanceVerifier > type: requirement_ref > is inconclusive when project_id is not a number
+    ✓ AcceptanceVerifier > type: composite > passes when all sub-criteria pass
+    ✓ AcceptanceVerifier > type: composite > fails immediately when the first sub-criterion fails
+    ✓ AcceptanceVerifier > type: composite > fails when a command sub-criterion fails inside a composite
+    ✓ AcceptanceVerifier > type: composite > uses default label when none is provided
+    ✓ AcceptanceVerifier > type: composite > passes an empty composite
+    ✓ AcceptanceVerifier > unknown criterion type > returns a failed check for an unrecognized type
+
+Full verification suite (regression — includes pre-existing failures in test-verifier.test.ts):
+  Tests: 181 passed, 1 failed (pre-existing failure in test-verifier.test.ts unrelated to this subphase)
+
+Pre-existing typecheck errors (in test-verifier.ts, not touched this subphase):
+  37 errors total; 0 in acceptance-verifier.ts, database.ts, or persistence/index.ts

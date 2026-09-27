@@ -84,3 +84,18 @@ export function withTransaction<T>(
   const tx = db.transaction(fn);
   return tx();
 }
+
+/**
+ * Retrieve all requirements for a given project from the database.
+ * Returns an empty array when the project has no requirements or does not exist.
+ */
+export function getRequirementsByProjectId(
+  db: Database.Database,
+  projectId: number,
+): { id: number; req_id: string; description: string; priority: number; status: string }[] {
+  return db
+    .prepare(
+      'SELECT id, req_id, description, priority, status FROM requirements WHERE project_id = ? ORDER BY id',
+    )
+    .all(projectId) as { id: number; req_id: string; description: string; priority: number; status: string }[];
+}
